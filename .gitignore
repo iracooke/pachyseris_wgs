@@ -5,3 +5,8 @@
 *.xml
 *.html
 .DS_Store
+*.fasta.fai
+freebayes/
+figures/
+mpileup/
+gatk/

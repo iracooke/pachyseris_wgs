@@ -5,28 +5,29 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
 ```
 
-Linkage stats can be calculated from vcftools. This calculates linkage for individual snps.  This is a huge amount of very noisy data because with so few individuals we do not have good estimates of allele frequencies.  A superficial look at this data by fitting a smoothing line gives the wrong impression that we have captured linkage decay.  
+Linkage stats can be calculated from vcftools. This calculates linkage for individual snps.  This is a huge amount of very noisy data because with so few individuals we do not have good estimates of allele frequencies.  Very roughly this seems to capture linkage decay.   
 
 ```{r linkage}
-#vcftools  --minQ 20 --vcf var.vcf --geno-r2 --minGQ 20 --chr 'flattened_line_0' 
-# vcftools --minQ 20 --vcf var.vcf --geno-r2 --minGQ 10  --ld-window-bp 200
+# vcftools --minQ 20 --vcf var.vcf --geno-r2 --minGQ 5 --max-missing 0.7 --ld-window-bp 500  --min-r2 0.001 --chr 'flattened_line_0' 
 ld_stats <- read.delim("freebayes/out.geno.ld") %>% filter(!is.na(R.2))
 ld_stats <- ld_stats %>% mutate(distance=abs(POS2-POS1))
 
-lds <- ld_stats %>% filter(N_INDV>18)
+lds <- ld_stats %>% filter(N_INDV>16)
 
 ggplot(lds,aes(x=distance,y=R.2)) + geom_point() + geom_smooth()
 ```
 
-In fact what seems to be the case is that we have just captured the overall density of points which arises because there are far more points spaced closely together than further apart.  Because the distribution of linkage values is truncated at zero we are just capturing bias that this creates.
+We need to be cautious about this though because far more points spaced closely together than further apart.  Because the distribution of linkage values is truncated at zero we might just be capturing the bias this creates.  More analysis needed!
 
 ```{r}
 ggplot(lds %>% filter(R.2!=1),aes(x=distance,y=R.2)) + geom_density_2d()
 ```
 
-Another way to look at this is with the PopGenome library.
+Another way to look at this is with the PopGenome library.  The following analyses are scans over the first contig only.
 
 ```{r}
 library(PopGenome)
