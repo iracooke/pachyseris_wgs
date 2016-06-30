@@ -1,0 +1,66 @@
+---
+---
+title: "Population structure and species delineation"
+output: html_document
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.width=12, fig.height=8,
+                      echo=FALSE, warning=FALSE, message=FALSE)
+knitr::opts_chunk$set(cache=FALSE)
+options(width = 60)
+library(ggplot2)
+library(stringr)
+library(dplyr)
+library(tidyr)
+library(SNPRelate)
+# library(xlsx)
+```
+
+
+```{r sampledata}
+sample_data <- read.delim("raw_data/samples.txt")
+
+c1 <- sample_data %>% filter(Cluster=="Cluster1") %>% select(SampleCode)
+c2 <- sample_data %>% filter(Cluster=="Cluster2") %>% select(SampleCode)
+c3 <- sample_data %>% filter(Cluster=="Cluster3") %>% select(SampleCode)
+```
+
+As a first pass look at the structure of the data we use the `SNPRelate` package.  For further ideas and reading see `vignette("SNPRelateTutorial")`.  Another option is to look at `DAPC` analysis implemented in the `adegenet` package. 
+
+```{r}
+# This takes a long time but needs to be run once in order for downstream steps to work
+# snpgdsVCF2GDS("freebayes/var.nosperm.vcf", "freebayes/var.nosperm.gds", method="biallelic.only")
+
+genofile <- snpgdsOpen("freebayes/var.nosperm.gds")
+samples <- read.gdsn(index.gdsn(genofile, index=1))
+
+set.seed(1000)
+snpset <- snpgdsLDpruning(genofile, ld.threshold=0.05,autosome.only = FALSE)
+
+snpset.id <- unlist(snpset)
+pca <- snpgdsPCA(genofile, snp.id=snpset.id, num.thread=2,autosome.only = FALSE)
+
+pc.percent <- pca$varprop*100
+head(round(pc.percent, 2))
+
+pca_d <- data.frame(sample.id = pca$sample.id,EV1 = pca$eigenvect[,1],EV2 = pca$eigenvect[,2],stringsAsFactors = FALSE)
+
+clusters=rep(NA,length=nrow(pca_d))
+clusters[which(pca_d$sample.id %in% c1$SampleCode)] <- "Cluster1"
+clusters[which(pca_d$sample.id %in% c2$SampleCode)] <- "Cluster2"
+clusters[which(pca_d$sample.id %in% c3$SampleCode)] <- "Cluster3"
+
+pca_d <- cbind(pca_d,cluster=clusters)
+p <- ggplot(pca_d,aes(x=EV1,y=EV2)) + geom_point(aes(color=cluster),size=4) 
+
+ggsave(filename = "figures/PCA.png",p)
+
+snpgdsFst(genofile, population=as.factor(pca_d$cluster),method="W&C84",autosome.only = FALSE)
+
+ibs.hc <- snpgdsHCluster(snpgdsIBS(genofile, num.thread=2,autosome.only = FALSE))
+rv <- snpgdsCutTree(ibs.hc)
+plot(rv$dendrogram, leaflab="none", main="HapMap Phase II")
+
+snpgdsClose(genofile)
+```

@@ -1,0 +1,60 @@
+---
+title: "linkage.Rmd"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Linkage stats can be calculated from vcftools. This calculates linkage for individual snps.  This is a huge amount of very noisy data because with so few individuals we do not have good estimates of allele frequencies.  A superficial look at this data by fitting a smoothing line gives the wrong impression that we have captured linkage decay.  
+
+```{r linkage}
+#vcftools  --minQ 20 --vcf var.vcf --geno-r2 --minGQ 20 --chr 'flattened_line_0' 
+# vcftools --minQ 20 --vcf var.vcf --geno-r2 --minGQ 10  --ld-window-bp 200
+ld_stats <- read.delim("freebayes/out.geno.ld") %>% filter(!is.na(R.2))
+ld_stats <- ld_stats %>% mutate(distance=abs(POS2-POS1))
+
+lds <- ld_stats %>% filter(N_INDV>18)
+
+ggplot(lds,aes(x=distance,y=R.2)) + geom_point() + geom_smooth()
+```
+
+In fact what seems to be the case is that we have just captured the overall density of points which arises because there are far more points spaced closely together than further apart.  Because the distribution of linkage values is truncated at zero we are just capturing bias that this creates.
+
+```{r}
+ggplot(lds %>% filter(R.2!=1),aes(x=distance,y=R.2)) + geom_density_2d()
+```
+
+Another way to look at this is with the PopGenome library.
+
+```{r}
+library(PopGenome)
+# sample_data <- read.xlsx("raw_data/dna.anu.edu.au/pachyseris_sylvain.xlsx",sheetName = "Sheet2") %>% filter(!is.na(SampleCode))
+
+sample_data <- read.delim("raw_data/samples.txt")
+
+c1 <- sample_data %>% filter(Cluster=="Cluster1") %>% select(SampleCode)
+c2 <- sample_data %>% filter(Cluster=="Cluster2") %>% select(SampleCode)
+c3 <- sample_data %>% filter(Cluster=="Cluster3") %>% select(SampleCode)
+
+fl0_vcf <- readVCF("gatk/cc_fl0_filter.vcf.gz",frompos = 1,topos = 100000,tid = 'flattened_line_0',numcols = 1000)
+
+
+fl0_pops <- set.populations(fl0_vcf,list(C1=c1$SampleCode,C2=c2$SampleCode,C3=c3$SampleCode),diploid = TRUE)
+
+slide <- sliding.window.transform(fl0_pops,100,10, type=2, start.pos = 0,end.pos = 50000)
+slide <- diversity.stats(slide)
+values <- slide@nuc.diversity.within
+PopGplot(values)
+
+
+slide <- linkage.stats(slide, detail=TRUE)
+ld_d <- get.linkage(slide)
+ld_d <- data.frame(ld_d[[1]],x=as.numeric(1:nrow(ld_d[[1]])))
+
+ggplot(ld_d,aes(x=x*10,y=Kelly.Z_nS)) + geom_point() + geom_smooth() + xlim(0,5000)
+ggplot(ld_d,aes(x=x*200,y=Wall.Q)) + geom_point() + geom_smooth() + xlim(0,10000)
+
+
+```

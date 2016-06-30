@@ -1,0 +1,72 @@
+---
+---
+title: "High level summary of whole genome variants"
+output: html_document
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.width=12, fig.height=8,
+                      echo=FALSE, warning=FALSE, message=FALSE)
+knitr::opts_chunk$set(cache=FALSE)
+options(width = 60)
+library(ggplot2)
+library(stringr)
+library(dplyr)
+library(tidyr)
+# library(xlsx)
+```
+
+For each contig we can run a sliding window to calculate nucleotide diversity.  This is for "flattened_line_0" which is the longest and probably least diverse contig overall. We see various patterns and even some differences between lineages but what is required here is an estimate of the error.  We also need a way to be able to make these scans work across the entire genome.
+
+```{r snps}
+library(PopGenome)
+# sample_data <- read.xlsx("raw_data/dna.anu.edu.au/pachyseris_sylvain.xlsx",sheetName = "Sheet2") %>% filter(!is.na(SampleCode))
+
+sample_data <- read.delim("raw_data/samples.txt")
+
+c1 <- sample_data %>% filter(Cluster=="Cluster1") %>% select(SampleCode)
+c2 <- sample_data %>% filter(Cluster=="Cluster2") %>% select(SampleCode)
+c3 <- sample_data %>% filter(Cluster=="Cluster3") %>% select(SampleCode)
+
+fl0_vcf <- readVCF("gatk/cc_fl0_filter.vcf.gz",frompos = 1,topos = 100000,tid = 'flattened_line_0',numcols = 1000)
+
+
+fl0_pops <- set.populations(fl0_vcf,list(C1=c1$SampleCode,C2=c2$SampleCode,C3=c3$SampleCode),diploid = TRUE)
+
+slide <- sliding.window.transform(fl0_pops,1000,10, type=2, start.pos = 0,end.pos = 50000)
+slide <- diversity.stats(slide)
+values <- slide@nuc.diversity.within
+PopGplot(values)
+
+
+slide <- linkage.stats(slide, detail=TRUE)
+ld_d <- get.linkage(slide)
+ld_d <- data.frame(ld_d[[1]],x=as.numeric(1:nrow(ld_d[[1]])))
+
+ggplot(ld_d,aes(x=x*10,y=Kelly.Z_nS)) + geom_point() + geom_smooth() + xlim(0,5000)
+ggplot(ld_d,aes(x=x*200,y=Wall.Q)) + geom_point() + geom_smooth() + xlim(0,10000)
+
+
+nucdiv <- slide@nuc.diversity.within
+nd <- as.data.frame(nucdiv) %>% cbind(x=as.numeric(1:nrow(nucdiv)))
+nmd <- nd %>% gather(Population,NucDiv,-x)  
+ggplot(nmd,aes(x=x,y=NucDiv/10000)) + geom_point(aes(group=Population,color=Population)) + geom_smooth(span=0.5,aes(color=Population,group=Population))
+```
+
+
+Using the same `PopGenome` framework we can also run a sliding window scan for F_st outliers.  Again we need to figure out significance values and errors here.
+
+```{r}
+slide <- F_ST.stats(slide, mode="nucleotide")
+slide <- F_ST.stats.2(slide)
+Bayes.input <- getBayes(slide)
+
+BAYES.class <- BayeScanR(Bayes.input)
+
+pairwise.FST <- t(slide@nuc.F_ST.vs.all)
+pwdfst_d <- data.frame(pairwise.FST,x=as.numeric(1:nrow(pairwise.FST))) %>% gather(Pop,Fst,-x)
+
+pfst <- ggplot(pwdfst_d,aes(x=x*10000,y=Fst)) + geom_point(aes(color=Pop)) + geom_smooth(span=0.1,aes(color=Pop,group=Pop)) + xlab("Contig1 Coordinate")
+
+ggsave(pfst,filename = "figures/Pairwise_Fst.png")
+```

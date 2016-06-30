@@ -1,0 +1,32 @@
+---
+title: "High level summary of whole genome variants"
+output: html_document
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.width=12, fig.height=8,
+                      echo=FALSE, warning=FALSE, message=FALSE)
+knitr::opts_chunk$set(cache=FALSE)
+options(width = 60)
+library(ggplot2)
+library(stringr)
+library(dplyr)
+library(tidyr)
+# library(xlsx)
+```
+
+## Depth
+
+Using the depth stats for the entire genome (from bcftools) we can see a hint of two peaks.  The smaller peak is probably from haploid regions. Reliable (diploid) variants are most likely within depth 30 to 50
+
+```{r depth}
+# How was var.qual.stats.dp.txt generated?
+#
+dp_stats <- read.delim("raw_data/var.qual.stats.dp.txt",header = FALSE,skip = 2)
+names(dp_stats) <- c("DP","ID","Bin","Num.Genotypes","Fraction.Genotypes","Num.Sites","Fraction.Sites")
+dp_stats <- dp_stats[1:490,]
+dp_stats$Bin <- 1:490
+ggplot(dp_stats,aes(x=Bin,y=Fraction.Sites)) + geom_line() + xlim(0,100)
+ggsave(filename = "figures/variants_by_depth.png",ggplot(dp_stats,aes(x=Bin,y=Fraction.Sites)) + 
+           geom_line(size=3) + xlim(0,200)+ theme(text=element_text(size=30)))
+```
