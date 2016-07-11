@@ -13,12 +13,15 @@ Linkage stats can be calculated from vcftools. This calculates linkage for indiv
 
 ```{r linkage}
 # vcftools --minQ 20 --vcf var.vcf --geno-r2 --minGQ 5 --max-missing 0.7 --ld-window-bp 500  --min-r2 0.001 --chr 'flattened_line_0' 
+#vcftools --minQ 20 --bcf var.DPFiltered.bcf --geno-r2 --minGQ 5 --max-missing 0.5 --ld-window-bp 500  --min-r2 0.001 --remove-indels
 ld_stats <- read.delim("freebayes/out.geno.ld") %>% filter(!is.na(R.2))
 ld_stats <- ld_stats %>% mutate(distance=abs(POS2-POS1))
 
-lds <- ld_stats %>% filter(N_INDV>16)
+lds <- ld_stats %>% filter(N_INDV>18)
 
 ggplot(lds,aes(x=distance,y=R.2)) + geom_point() + geom_smooth()
+
+ggplot(lds,aes(x=distance,y=R.2)) + geom_smooth()
 ```
 
 We need to be cautious about this though because far more points spaced closely together than further apart.  Because the distribution of linkage values is truncated at zero we might just be capturing the bias this creates.  More analysis needed!
