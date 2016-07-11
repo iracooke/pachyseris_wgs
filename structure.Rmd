@@ -1,5 +1,4 @@
 ---
----
 title: "Population structure and species delineation"
 output: html_document
 ---
@@ -13,54 +12,104 @@ library(ggplot2)
 library(stringr)
 library(dplyr)
 library(tidyr)
-library(SNPRelate)
-# library(xlsx)
 ```
 
+```{r adegenet}
+library(adegenet)
+
+# g_c01 <- read.delim("freebayes/out.012",header = FALSE, na.strings = "-1")[,-1]
+# i_c01 <- read.delim("freebayes/out.012.indv",header = FALSE)
+# geno_list <- lapply(1:nrow(i_c01),function(ri) as.integer(g_c01[ri,]))
+# names(geno_list) <- i_c01
+# gl <- new("genlight",geno_list)
+# library(ape)
+# tre <- nj(dist(as.matrix(gpl)))
+# tre
+# myCol <- colorplot(pca1$scores,pca1$scores, transp=TRUE, cex=4)
+# abline(h=0,v=0, col="grey")
+# add.scatter.eig(pca1$eig[1:40],2,1,2, posi="topright", inset=.05, ratio=.3)
+# 
+# plot(tre, typ="fan", show.tip=FALSE)
+# tiplabels(pch=20, col=myCol, cex=4)
+# title("NJ tree of Pachyseris")
+
+# plot(tre, typ="fan", cex=0.7)
+# title("NJ tree of the US influenza data")
+
+gpl <- read.PLINK("freebayes/plink.raw",map.file = "freebayes/out.map")
+
+
+sample_data <- read.delim("raw_data/samples.txt",stringsAsFactors = FALSE) 
+# sample_data <- sample_data %>% mutate(SampleCode=str_match(SampleCode,"(DC....)")[,2])
+# sample_data <- sample_data %>% filter(SampleCode!="") %>% filter(!is.na(SampleCode))
+sample_data <- sample_data %>% filter(SampleCode %in% gpl@ind.names)
+pops <- sample_data$Cluster[match(sample_data$SampleCode,gpl@ind.names)]
+
+# toRemove <- is.na(glMean(gpl, alleleAsUnit = FALSE))
+# which(toRemove)
+# c_gpl <- gpl[, !toRemove]
+
+f_gpl <- gpl[,1:10000]
+
+dapc1 <- dapc(f_gpl,factor(pops),n.pca = 6,n.da = 3)
+
+# dapc1 <- dapc(f_gpl,factor(pops))
+
+scatter(dapc1,scree.da=FALSE, bg="white", posi.pca="topright", legend=TRUE,
+        txt.leg=paste("group", 1:3), col=c("red","blue","yellow"))
+
+compoplot(dapc1, col=c("red","blue","yellow"),lab="", txt.leg=paste("group", 1:3), ncol=3)
+assignplot(dapc1) 
+
+loadingplot(dapc1$var.contr)
+
+```
 
 ```{r sampledata}
-sample_data <- read.delim("raw_data/samples.txt")
-
-c1 <- sample_data %>% filter(Cluster=="Cluster1") %>% select(SampleCode)
-c2 <- sample_data %>% filter(Cluster=="Cluster2") %>% select(SampleCode)
-c3 <- sample_data %>% filter(Cluster=="Cluster3") %>% select(SampleCode)
+# sample_data <- read.delim("raw_data/samples.txt")
+# 
+# c1 <- sample_data %>% filter(Cluster=="Cluster1") %>% select(SampleCode)
+# c2 <- sample_data %>% filter(Cluster=="Cluster2") %>% select(SampleCode)
+# c3 <- sample_data %>% filter(Cluster=="Cluster3") %>% select(SampleCode)
 ```
+
 
 As a first pass look at the structure of the data we use the `SNPRelate` package.  For further ideas and reading see `vignette("SNPRelateTutorial")`.  Another option is to look at `DAPC` analysis implemented in the `adegenet` package. 
 
 ```{r}
+library(SNPRelate)
 # This takes a long time but needs to be run once in order for downstream steps to work
-# snpgdsVCF2GDS("freebayes/var.nosperm.vcf", "freebayes/var.nosperm.gds", method="biallelic.only")
+snpgdsVCF2GDS("freebayes/var.DPFiltered.vcf", "freebayes/var.DPFiltered.gds", method="biallelic.only")
 
-genofile <- snpgdsOpen("freebayes/var.nosperm.gds")
+genofile <- snpgdsOpen("freebayes/var.DPFiltered.gds")
 samples <- read.gdsn(index.gdsn(genofile, index=1))
-
+# 
 set.seed(1000)
 snpset <- snpgdsLDpruning(genofile, ld.threshold=0.05,autosome.only = FALSE)
-
+# 
 snpset.id <- unlist(snpset)
 pca <- snpgdsPCA(genofile, snp.id=snpset.id, num.thread=2,autosome.only = FALSE)
-
+# 
 pc.percent <- pca$varprop*100
 head(round(pc.percent, 2))
-
+# 
 pca_d <- data.frame(sample.id = pca$sample.id,EV1 = pca$eigenvect[,1],EV2 = pca$eigenvect[,2],stringsAsFactors = FALSE)
 
-clusters=rep(NA,length=nrow(pca_d))
-clusters[which(pca_d$sample.id %in% c1$SampleCode)] <- "Cluster1"
-clusters[which(pca_d$sample.id %in% c2$SampleCode)] <- "Cluster2"
-clusters[which(pca_d$sample.id %in% c3$SampleCode)] <- "Cluster3"
+pca_d <- pca_d %>% filter(sample.id %in% sample_data$SampleCode)
 
-pca_d <- cbind(pca_d,cluster=clusters)
-p <- ggplot(pca_d,aes(x=EV1,y=EV2)) + geom_point(aes(color=cluster),size=4) 
+pca_clusters <- sample_data$Cluster[match(sample_data$SampleCode,pca_d$sample.id)]
+pca_locations <- sample_data$Location[match(sample_data$SampleCode,pca_d$sample.id)]
 
+pca_d <- cbind(pca_d,cluster=pca_clusters,location=pca_locations)
+p <- ggplot(pca_d,aes(x=EV1,y=EV2)) + geom_point(aes(color=cluster,shape=location),size=4) 
+# 
 ggsave(filename = "figures/PCA.png",p)
-
+# 
 snpgdsFst(genofile, population=as.factor(pca_d$cluster),method="W&C84",autosome.only = FALSE)
-
+# 
 ibs.hc <- snpgdsHCluster(snpgdsIBS(genofile, num.thread=2,autosome.only = FALSE))
 rv <- snpgdsCutTree(ibs.hc)
 plot(rv$dendrogram, leaflab="none", main="HapMap Phase II")
-
+# 
 snpgdsClose(genofile)
 ```
