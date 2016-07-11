@@ -39,7 +39,7 @@ Extract section of stats file
 Filter based on depth
 
 ```bash
-	bcftools filter -e 'DP>60 || DP<30' var.raw.bcf -O b > var.DPFiltered.bcf
+	bcftools filter -e 'DP>100 || DP<20' var.raw.bcf -O b > var.DPFiltered.bcf
 ```
 
 Get a sample of Depths for the first 10k snps
