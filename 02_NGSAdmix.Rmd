@@ -1,0 +1,43 @@
+---
+title: "NGSAdmix"
+author: "Ira Cooke"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+knitr::opts_chunk$set(fig.width=12, fig.height=8,
+                      echo=FALSE, warning=FALSE, message=FALSE)
+```
+
+```{r}
+library(tidyverse)
+source("R/ngsadmix.R")
+```
+
+
+```{r}
+sample_data <- read_sample_admix_data()
+```
+
+Admixture proportions with K=3
+
+```{r}
+q2_admix <- read_table("hpc/NGSAdmix/all.k3.ngsadmix.qopt",col_names = FALSE) %>% 
+  cbind(sample_data) %>% 
+  gather(cluster,proportion,-Pop,-Sample,-Location) %>% 
+  arrange(Pop)
+
+q2_admix$Sample <- factor(q2_admix$Sample,levels=unique(q2_admix$Sample))
+
+ggplot(q2_admix,aes(x=Sample,y=proportion)) + 
+  geom_bar(aes(fill=Pop),stat="identity") + 
+  theme(axis.text.x = element_text(angle=90)) + 
+  scale_color_manual(values = c("Cluster3" = "#e41a1c","Cluster2" = "#377eb8", "Cluster1" = "#4daf4a"))
+
+ggsave("figures/NGSAdmix.k3.png")
+```
+
+
+

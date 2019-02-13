@@ -14,21 +14,17 @@ knitr::opts_chunk$set(fig.width=12, fig.height=8,
 ```{r}
 library(tidyverse)
 library(ggpubr)
+source("R/ngsadmix.R")
 ```
 
-Before looking at population structure with NGSadmix we first PCAdmix to attempt to infer the correct number of clusters.  This is based purely on visual inspection of the plot.
+```{r}
+sample_data <- read_sample_admix_data()
+```
+
+Before looking at population structure with NGSadmix we first use PCAdmix to attempt to infer the correct number of clusters. 
 
 ```{r}
-samples <- read_tsv("hpc/NGSAdmix/all.bamlist",col_names = "bam") %>% 
-  pull(bam) %>% 
-  stringr::str_extract(pattern = "DC([^\\_]+)")
 
-sample_data <- read_tsv("raw_data/samples.txt") %>% 
-  filter(SampleCode!="") %>% 
-  select(Sample=SampleCode,Pop=Cluster,Location) %>% 
-  add_row(Pop="Cluster1",Location="Unknown",Sample="DCRM31")
-
-sample_data <- sample_data[match(samples,sample_data$Sample),]
 
 covmat <- read_table2("hpc/NGSadmix/pcangst.cov",col_names = FALSE) %>% 
   as.matrix()
@@ -38,96 +34,34 @@ rownames(covmat) <- sample_data$Sample
 
 pop_eigen <- eigen(covmat)
 
-pop_pca <- data.frame(x=pop_eigen$vectors[,1],y=pop_eigen$vectors[,2],sample_data)
+pop_pca <- data.frame(x=pop_eigen$vectors[,1],y=pop_eigen$vectors[,2],sample_data) %>% 
+  mutate(Location = str_remove(Location,"GBR - ")) %>% 
+  filter(Location!="Unknown")
 
-ggplot(pop_pca ,aes(x=x,y=y)) + geom_point(aes(shape=Pop,color=Location),size=3) + 
+ggplot(pop_pca ,aes(x=x,y=y)) + geom_point(aes(shape=Location,color=Pop),size=2) + 
   theme_pubclean() +
-  theme(legend.position = "right") +
-  xlab("PC1") + ylab("PC2")
+  guides(color='none') +
+  theme(legend.position = "bottom") +
+  theme(legend.title = element_blank()) +
+  xlab("PC1") + ylab("PC2") +
+  scale_color_manual(values = c("Cluster3" = "#e41a1c","Cluster2" = "#377eb8", "Cluster1" = "#4daf4a"))
+
+ggsave("figures/PCAngst.png")
 ```
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+It might also be of interest to zoom in on individual clusters to see if there is sub-structure
 
 ```{r}
+ggplot(pop_pca ,aes(x=x,y=y)) + 
+  geom_point(aes(shape=Location,color=Location),size=2) + 
+  facet_wrap(~Pop,nrow = 1, scales = "free") +
+  theme_pubclean() +
+  guides(shape='none') +
+  theme(legend.position = "bottom") +
+  theme(legend.title = element_blank()) +
+  xlab("PC1") + ylab("PC2") #+
+#  scale_color_manual(values = c("Cluster3" = "#e41a1c","Cluster2" = "#377eb8", "Cluster1" = "#4daf4a"))
 
-bl <- read.table("hpc/NGSadmix/all.bamlist")
-
-ibs_indv <- read_tsv("hpc/NGSAdmix/all.bamlist",col_names = "bam") %>% pull(bam) %>% stringr::str_extract(pattern = "DC([^\\_]+)")
-
-sample_data <- read.delim("raw_data/samples.txt",stringsAsFactors = FALSE) %>% filter(SampleCode!="") %>% select(Sample=SampleCode,Pop=Cluster,Location) %>% add_row(Pop="Cluster1",Location="Unknown",Sample="DCRM31")
-
-sample_data <- sample_data[match(ibs_indv,sample_data$Sample),]
-
-if ( !identical(ibs_indv,sample_data$Sample) ){
-  cat("Error")
-}
-
-ibsmat <- as.matrix(read.table("hpc/NGSAdmix/all.ibsMat"))
-colnames(ibsmat) <- sample_data$Sample
-rownames(ibsmat) <- sample_data$Sample
-ibs_mds <- cmdscale(as.dist(ibsmat))
-
-ibs_mds_p <- data.frame(x=ibs_mds[,1],y=ibs_mds[,2],sample_data)
+ggsave("figures/PCAngst_SeparatePops.png",width = 16)
 ```
-
-```{r}
-ggplot(ibs_mds_p,aes(x=x,y=y)) + geom_point(aes(color=Pop))
-```
-
-```{r}
-ibs_cov <- as.matrix(read.table("hpc/NGSAdmix/all.covMat"))
-ibs_e <- eigen(ibs_cov)
-
-ibs_pca <- data.frame(x=ibs_e$vectors[,1],y=ibs_e$vectors[,2],sample_data)
-
-ggplot(ibs_pca ,aes(x=x,y=y)) + geom_point(aes(shape=Pop,color=Location))
-```
-
-
-```{r}
-q2_admix <- read_table("hpc/NGSAdmix/all.k3.ngsadmix.qopt",col_names = FALSE) %>% cbind(sample_data) %>% gather(cluster,proportion,-Pop,-Sample,-Location) %>% arrange(Pop)
-
-q2_admix$Sample <- factor(q2_admix$Sample,levels=unique(q2_admix$Sample))
-
-```
-
-Admixture proportions with K=3
-
-```{r}
-ggplot(q2_admix,aes(x=Sample,y=proportion)) + geom_bar(aes(fill=Pop),stat="identity") + theme(axis.text.x = element_text(angle=90)) + scale_color_manual(values = c("Cluster3" = "#e41a1c","Cluster2" = "#377eb8", "Cluster1" = "#4daf4a"))
-```
-
-
-Try plotting a tree based on the IBS matrix.  Note the definition of IBS in from the ANGSD wiki 
-
-> This is the avg. distance between pairs of individuals. Distance is zero if the base in the same and 1 otherwise. 
-> You can use this for MDS (see below)
-
-```{r}
-library(phangorn)
-library(ggtree)
-ibsmat_nosperm <- ibsmat[1:20,1:20]
-sample_data_nosperm <- sample_data %>% filter(Sample!="DCRM31")
-treeUPGMA <- upgma(as.dist(ibsmat_nosperm))
-```
-
-```{r}
-gt <- ggtree(treeUPGMA,layout="unrooted")
-gt %<+% sample_data_nosperm + geom_tippoint(aes(shape=Location,color=Pop),size=6) + theme(legend.position = "right") + scale_color_manual(values = c("Cluster3" = "#e41a1c","Cluster2" = "#377eb8", "Cluster1" = "#4daf4a"))
-
-```
-
