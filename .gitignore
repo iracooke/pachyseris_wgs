@@ -10,3 +10,5 @@ freebayes/
 figures/
 mpileup/
 gatk/
+raw_data/
+hpc/

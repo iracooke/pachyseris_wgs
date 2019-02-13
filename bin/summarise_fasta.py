@@ -25,3 +25,6 @@ args  = parser.parse_args()
 
 for name,seq in read_fasta(args.fastafile):
     print_fasta_summary(name,seq)
+
+
+3465 9/june
