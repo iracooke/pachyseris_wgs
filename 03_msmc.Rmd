@@ -15,11 +15,6 @@ library(tidyverse)
 ```
 
 ```{r}
-#mu Matz 4e-9
-mu <- 4.83e-8 # mu Prada
-
-gen <- 20
-
 read_final <- function(path){
   ids_to_pops <- c("DC1105"="C3",
                    "DC1107"="C2",
@@ -43,36 +38,12 @@ read_final <- function(path){
                         "DC7969"="GD")
   
   id <- basename(path) %>% stringr::str_extract("DC[^_]+")
-  read_tsv(path) %>% add_column(ID=id) %>% add_column(Pop=ids_to_pops[id]) %>% add_column(Loc=ids_to_locations[id])
+  read_tsv(path) %>% 
+    add_column(ID=id) %>% 
+    add_column(Pop=ids_to_pops[id]) %>% 
+    add_column(Loc=ids_to_locations[id])
 }
 
-msmc_data <- lapply(list.files("hpc/msmc/","within_msmc.final.txt",full.names = TRUE),read_final)
-msmc_data <- do.call(rbind,msmc_data)
-
-ids_to_labelx <- c("DC1105"=200000,"DC1107"=200000,"DC1109"=200000,"DC7955"=15000,"DC7957"=30000,"DC7967"=20000)
-
-label_data <- do.call(rbind,lapply(names(ids_to_labelx),function(idl) {
-  msmc_data %>% mutate(x=left_time_boundary/mu*gen) %>% filter(ID==idl) %>% filter(x>ids_to_labelx[idl]) %>% head(1)
-}))
-
-library(ggrepel)
-
-#+ geom_label_repel(data=label_data,aes(x=x,y=(1/lambda)/mu,label=ID),segment.size = unit(2,"lines"))
-
-ps <- ggplot(msmc_data,aes(group=ID,x=left_time_boundary/mu*gen,y=(1/lambda)/mu)) + geom_line(aes(color=Pop)) + scale_x_log10() + xlab("Years ago") + ylab("Effective population size") + facet_wrap(~Loc) + scale_color_manual(values = c("C3" = "#e41a1c","C2" = "#377eb8", "C1" = "#4daf4a"))
-
-ggsave(ps,filename = "figures/msmc.png",width=12,height=8)
-
-```
-
-
-```{r}
-# ggplot(msmc_data,aes(group=ID,x=left_time_boundary/mu*gen,y=(1/lambda)/mu)) + geom_line(aes(color=ID)) + geom_point(aes(shape=Loc)) + scale_x_log10() + xlab("Years ago") + ylab("Effective population size") 
-```
-
-With Bootstraps
-
-```{r}
 read_bootstraps <- function(indv){
   bs_files <- list.files(paste("hpc/msmc/",indv,"_within_msmc_bs",sep=""),"*.final.txt", full.names = TRUE)
 
@@ -82,34 +53,64 @@ read_bootstraps <- function(indv){
   }))
   data
 }
+```
 
-mu <- 4.83e-8 # mu Prada
 
+```{r}
+#mu <- 4.83e-8 # mu Prada
+mu <- 2.9e-8 # mu Mao
 gen <- 10
 
 individuals <- c("DC1105","DC1107","DC1108","DC1109","DC7955","DC7957","DC7962","DC7967","DC7968","DC7969")
 
-bs_data <- do.call(rbind,lapply(individuals,read_bootstraps))
+if ( !file.exists("cache/msmc_bootstraps.rds") ){
+  bs_data <- do.call(rbind,lapply(individuals,read_bootstraps))
+  write_rds(bs_data,path = "cache/msmc_bootstraps.rds")
+} else {
+  bs_data <- read_rds("cache/msmc_bootstraps.rds")
+}
 
-bs_av <- bs_data %>% group_by(ID,Pop,Loc,time_index) %>% summarise(left_time_boundary=mean(left_time_boundary),right_time_boundary=mean(right_time_boundary),lambda=mean(lambda))
-
-pop_av <- bs_av %>% group_by(Pop,time_index) %>% summarise(left_time_boundary=mean(left_time_boundary),right_time_boundary=mean(right_time_boundary),lambda=mean(lambda))
+bs_av <- bs_data %>% 
+  group_by(ID,Pop,Loc,time_index) %>%
+  summarise(left_time_boundary=mean(left_time_boundary),
+            right_time_boundary=mean(right_time_boundary),
+            lambda=mean(lambda))
 
 msmc_step_plot <- ggplot(bs_av,aes(x=left_time_boundary/mu*gen,y=(1/lambda)/mu)) + 
-#  scale_x_log10(breaks=c(1e+4,1e+5,1e+6), labels=c("10kya","100kya","1mya")) +
-  scale_x_log10() +
-  geom_vline(xintercept = 1e5) +
-    geom_vline(xintercept = 2e5) +
-  geom_vline(xintercept = 5e5) +
-    geom_step(size=1,aes(group=ID,color=ID)) +# scale_color_manual(values = c("C3" = "#e41a1c","C2" = "#377eb8", "C1" = "#4daf4a")) +
-  geom_step(data=pop_av,size=0.5,aes(color=Pop),linetype = 2,alpha=0.5) +
-    xlab("Years Ago") + 
+  geom_step(size=1,aes(group=ID,color=Pop)) + 
+  scale_color_manual(values = c("C3" = "#e41a1c","C2" = "#377eb8", "C1" = "#4daf4a")) +
+  scale_x_log10(breaks=c(1e+4,1e+5,1e+6,1e+7), labels=c("10kya","100kya","1mya","10mya")) +
+  xlab("Years Ago") + 
   ylab(expression(paste("Effective Population Size ",N[e]))) + 
-  theme_minimal() + theme(text=element_text(size=20), legend.title = element_blank()) + facet_wrap(~Loc, ncol = 1) 
+  theme_minimal() + 
+  theme(text=element_text(size=20), legend.title = element_blank()) + 
+  guides(color='none') +
+  facet_wrap(~Loc, ncol = 1) #+
+  # geom_vline(xintercept = 1e5) +
+  # geom_vline(xintercept = 2e5) +
+  # geom_vline(xintercept = 5e5) +
 
 ggsave(msmc_step_plot,filename = "figures/msmc_step_id.png",width=14)
-ggsave(msmc_step_plot,filename = "figures/msmc_step.png",width=14)
-
 ```
 
+```{r}
+bs_data_id <- bs_data %>% unite(bsid,ID,bootstrap,remove = FALSE)
 
+ggplot(bs_av,aes(x=left_time_boundary/mu*gen,y=(1/lambda)/mu)) + 
+#  geom_step(data = bs_data_id,size=1,aes(group=bsid,color=Pop),alpha=0.1) + 
+  geom_step(data = bs_av,size=0.5,aes(group=ID,color=Pop),alpha=0.5,linetype=1) + 
+  geom_smooth(aes(color=Pop,fill=Pop),span=0.2,se=FALSE) +
+  scale_color_manual(values = c("C3" = "#e41a1c","C2" = "#377eb8", "C1" = "#4daf4a")) +
+  scale_x_log10(breaks=c(1e+4,1e+5,1e+6,1e+7), labels=c("10kya","100kya","1mya","10mya")) +
+  xlab("Years Ago") + 
+  ylab(expression(paste("Effective Population Size ",N[e]))) + 
+  theme_minimal() + 
+  theme(text=element_text(size=20), legend.title = element_blank()) + 
+  guides(color='none',fill='none') +
+  ylim(0,2e5)
+  # geom_vline(xintercept = 1e5) +
+  # geom_vline(xintercept = 2e5) +
+  # geom_vline(xintercept = 5e5) +
+
+ggsave(filename = "figures/msmc_step.png",width=14)
+```

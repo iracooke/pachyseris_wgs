@@ -1,0 +1,60 @@
+---
+title: "mitochondria"
+output: html_document
+---
+
+```{r}
+knitr::opts_chunk$set(fig.width=12, fig.height=8,
+                      echo=FALSE, warning=FALSE, message=FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(pegas)
+
+sample_data <- read.delim("raw_data/samples.txt",stringsAsFactors = FALSE) %>% filter(SampleCode!="") %>% select(Pop=Cluster,Location,Sample=SampleCode) 
+
+x <- read.dna(file="hpc/mito_mapping/AllSamplesPSPEMitoConsensusTrim.fasta",format="fasta")
+
+sample_data <- sample_data <- sample_data[match(labels(x),sample_data$Sample),]
+
+c_colors <- sample_data %>% pull(Pop) %>% stringr::str_replace_all(c("Cluster3"="#e41a1c","Cluster2"="#377eb8","Cluster1"="#4daf4a"))
+
+l_colors <- sample_data %>% pull(Location) %>% stringr::str_replace_all(c("GBR - Myrmidon BackReef"="#e41a1c","GBR - GreatDet BackReef"="#377eb8","GBR - Ribbon10 BackReef"="#4daf4a"))
+
+#c_colors <- sample_data %>% pull(Pop) %>% stringr::str_replace_all(c("Cluster3"=,"Cluster2","Cluster1"),c("#e41a1c","#377eb8","#4daf4a"))
+
+h <- haplotype(x, labels = labels(x))
+net <- haploNet(h)
+plot(net, size=attr(net, "freq"), scale.ratio = 0.15, cex = 0.5, col=c_colors)
+
+
+#plot(net, size=attr(net, "freq"), scale.ratio = 0.2, cex = 0.8, col=l_colors)
+```
+
+
+```{r}
+library(ggtree)
+mito_tree <- read.tree(file = "hpc/mito_mapping/AllSamplesPSPEMitoConsensusTrim.fasta.contree")
+
+sample_data <- read.delim("raw_data/samples.txt",stringsAsFactors = FALSE) %>% filter(SampleCode!="") %>% select(Sample=SampleCode,Pop=Cluster,Location) 
+
+gt <- ggtree(mito_tree,layout="unrooted")
+
+gt %<+% sample_data + geom_tiplab(aes(color=Pop)) + theme(legend.position = "right") + scale_color_manual(values = c("Cluster3" = "#e41a1c","Cluster2" = "#377eb8", "Cluster1" = "#4daf4a"))
+
+```
+
+
+Symbiodinium mitochondria
+
+```{r}
+library(ggtree)
+symb_mito_tree <- read.tree(file = "hpc/symbiodinium/AllSamplesPSPESymbC1MitoConsensusTrimmed.nex.contree")
+
+sgt <- ggtree(symb_mito_tree,layout="unrooted")
+
+symb_sample_data <- sample_data %>% filter(Sample %in% symb_mito_tree$tip.label)
+
+sgt %<+% symb_sample_data + geom_tiplab(aes(color=Pop)) + theme(legend.position = "right") + scale_color_manual(values = c("Cluster3" = "#e41a1c","Cluster2" = "#377eb8", "Cluster1" = "#4daf4a"))
+```

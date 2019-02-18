@@ -13,6 +13,7 @@ knitr::opts_chunk$set(fig.width=12, fig.height=8,
 
 ```{r}
 library(tidyverse)
+library(ggpubr)
 source("R/ngsadmix.R")
 ```
 
@@ -27,16 +28,20 @@ Admixture proportions with K=3
 q2_admix <- read_table("hpc/NGSAdmix/all.k3.ngsadmix.qopt",col_names = FALSE) %>% 
   cbind(sample_data) %>% 
   gather(cluster,proportion,-Pop,-Sample,-Location) %>% 
-  arrange(Pop)
+  arrange(Pop) %>% 
+  filter(Sample!="DCRM31")
 
 q2_admix$Sample <- factor(q2_admix$Sample,levels=unique(q2_admix$Sample))
 
 ggplot(q2_admix,aes(x=Sample,y=proportion)) + 
-  geom_bar(aes(fill=Pop),stat="identity") + 
+  geom_col(aes(fill=Pop), position = position_dodge(0.9),color="black", width = 1.0) + 
+  theme_pubclean() +
   theme(axis.text.x = element_text(angle=90)) + 
-  scale_color_manual(values = c("Cluster3" = "#e41a1c","Cluster2" = "#377eb8", "Cluster1" = "#4daf4a"))
+  scale_color_manual(values = c("Cluster3" = "#e41a1c","Cluster2" = "#377eb8", "Cluster1" = "#4daf4a")) +
+  xlab("") + ylab("Admixture Proportion") + 
+  guides(fill='none') 
 
-ggsave("figures/NGSAdmix.k3.png")
+ggsave("figures/NGSAdmix.k3.png", height = 4)
 ```
 
 
