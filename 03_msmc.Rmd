@@ -57,9 +57,10 @@ read_bootstraps <- function(indv){
 
 
 ```{r}
-#mu <- 4.83e-8 # mu Prada
-mu <- 2.9e-8 # mu Mao
-gen <- 10
+mu <- 4.83e-8 # mu Prada
+#mu <- 7.3e-9 # mu Cooke (Tenuis)
+#mu <- 2.9e-8 # mu Mao
+gen <- 35
 
 individuals <- c("DC1105","DC1107","DC1108","DC1109","DC7955","DC7957","DC7962","DC7967","DC7968","DC7969")
 
@@ -75,6 +76,8 @@ bs_av <- bs_data %>%
   summarise(left_time_boundary=mean(left_time_boundary),
             right_time_boundary=mean(right_time_boundary),
             lambda=mean(lambda))
+
+ymax <- bs_av %>% mutate(y=(1/lambda)/mu) %>% pull(y) %>% max()
 
 msmc_step_plot <- ggplot(bs_av,aes(x=left_time_boundary/mu*gen,y=(1/lambda)/mu)) + 
   geom_step(size=1,aes(group=ID,color=Pop)) + 
@@ -102,15 +105,16 @@ ggplot(bs_av,aes(x=left_time_boundary/mu*gen,y=(1/lambda)/mu)) +
   geom_smooth(aes(color=Pop,fill=Pop),span=0.2,se=FALSE) +
   scale_color_manual(values = c("C3" = "#e41a1c","C2" = "#377eb8", "C1" = "#4daf4a")) +
   scale_x_log10(breaks=c(1e+4,1e+5,1e+6,1e+7), labels=c("10kya","100kya","1mya","10mya")) +
-  xlab("Years Ago") + 
+  xlab('Years ago') +
   ylab(expression(paste("Effective Population Size ",N[e]))) + 
   theme_minimal() + 
   theme(text=element_text(size=20), legend.title = element_blank()) + 
   guides(color='none',fill='none') +
-  ylim(0,2e5)
+  ylim(0,ymax*1.2) +
+  scale_y_continuous(labels = scales::scientific)
   # geom_vline(xintercept = 1e5) +
   # geom_vline(xintercept = 2e5) +
   # geom_vline(xintercept = 5e5) +
 
-ggsave(filename = "figures/msmc_step.png",width=14)
+ggsave(filename = "figures/msmc_step.png",width=12)
 ```
