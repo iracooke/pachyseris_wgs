@@ -1,0 +1,1 @@
+for f in ../gatk2/*.fastq.gz;do ln -s $f .;done

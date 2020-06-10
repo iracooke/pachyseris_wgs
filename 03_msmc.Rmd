@@ -64,6 +64,12 @@ gen <- 35
 
 individuals <- c("DC1105","DC1107","DC1108","DC1109","DC7955","DC7957","DC7962","DC7967","DC7968","DC7969")
 
+dp <- read_table("hpc/msmc/read_depths_av.txt",col_names = c("ID","D")) %>% 
+  filter(ID %in% individuals)
+
+dp_low <- read_table("hpc/msmc/read_depths_av.txt",col_names = c("ID","D")) %>% 
+  filter(!(ID %in% individuals))
+
 if ( !file.exists("cache/msmc_bootstraps.rds") ){
   bs_data <- do.call(rbind,lapply(individuals,read_bootstraps))
   write_rds(bs_data,path = "cache/msmc_bootstraps.rds")

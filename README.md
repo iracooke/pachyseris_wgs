@@ -1,9 +1,17 @@
-Whole Genome Resequencing for Pachyseris speciosa
-=================================================
+# Whole Genome Resequencing for *Pachyseris speciosa* on the GBR
 
-This directory (the root) contains R and Rmd files for higher level analyses and plotting.
+Shell scripts and R code to accompany the paper
 
-For low level analyses (SNP calling) see `gatk` and `freebayes` directories
-
+> Cryptic diversity masks ecologically divergent coral species on tropical reefs
 
 
+### Raw Data Processing
+
+- [Host mitochondrial genome assembly](hpc/mitobim/README.md)
+- [Host mitochondrial haplotype network](hpc/mito_mapping/README.md)
+- [Symbiont mitochondrial haplotype network](hpc/symbiodinium/README.md)
+
+### Downstream Analysis
+
+- [Population Structure](01_population_structure.md)
+- [Demographic History with MSMC](03_msmc.md) : Rmd file [03_msmc.Rmd](03_msmc.Rmd)
