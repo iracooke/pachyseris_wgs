@@ -5,4 +5,12 @@ hpc/mitobim/iteration10/DC1105_pspemito-it10_noIUPAC.fasta
 hpc/mitobim/MITOS/pspe1.gff 
 hpc/mitobim/PSPEMitobim1Circularized.fasta
 
+hpc/mito_mapping/02_map_reads.sh             
+hpc/mito_mapping/03_call_consensus.sh        
 
+hpc/mito_mapping/04_generate_traits.sh       
+hpc/mito_mapping/06_generate_popart_nexus.sh
+
+hpc/mito_mapping/07_calculate_coverage.sh
+
+hpc/mito_mapping/*_consensus.fasta

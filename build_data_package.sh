@@ -1,4 +1,2 @@
 
-tar -zcvf data.tgz -T data.list
-
-rm data.list
+tar -zcvf data.tgz $(cat data.list)
