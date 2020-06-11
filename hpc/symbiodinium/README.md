@@ -13,7 +13,7 @@ Read coverage across the Clade C mitogenome showed clear islands of high coverag
 The consensus sequences for the remaining 16 samples were loaded into Geneious.  Stripping ambiguous sites resulted in an alignment of 8404bp with 99.5% identity across samples.
 
 This alignment was used to create a TCS network of haplotypes in PopArt
-![symbiont_haplonet](AllSamplesPSPESymbC1MitoConsensusHighCov_PopArt.png)
+![symbiont_haplonet](AllSamplesPSPESymbC1MitoConsensusHighCov_PopArt.svg)
 
 Finally we used iqtree to select an appropriate evolutionary model and infer a maximum likelihood tree for the sequences.
 
