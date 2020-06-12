@@ -1,0 +1,93 @@
+---
+title: "Population Structure"
+author: "Ira Cooke"
+output: github_document
+---
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(fig.width=12, fig.height=8,
+                      echo=FALSE, warning=FALSE, message=FALSE)
+```
+
+We used PCAngst to infer population structure from low whole genome sequencing data on our 20 *P. speciosa* samples.  PCAngst creates a sample covariance matrix to allow model-free genetic clustering of samples. It also calculates the optimal number of clusters and calculates admixture proportions based on these. 
+
+As input data to PCAngst we used bam files produced by following the GATK best practices workflow for mapping reads to the host genome, as well as marking adapters and duplicats. `angsd` was then used to call variant sites and calculate genotype likelihoods at all of those sites. See [hpc/angsd/02_import_vcf.sh] for full details.
+
+Genotype likelihood values were then used as input to `PCAngst` to produce a covariance matrix. 
+
+```{r}
+library(tidyverse)
+library(ggpubr)
+
+cluster_colors <- c("Cluster3" = "#e41a1c","Cluster2" = "#377eb8", "Cluster1" = "#4daf4a")
+
+samples <- read_tsv("hpc/angsd/all.bamlist",col_names = "bam") %>% 
+  pull(bam) %>% 
+  stringr::str_extract(pattern = "DC([^\\_]+)")
+  
+sample_data <- read_tsv("raw_data/samples.txt") %>% 
+  filter(SampleCode!="") %>% 
+  select(Sample=SampleCode,Pop=Cluster,Location) %>% 
+  add_row(Pop="Cluster1",Location="Unknown",Sample="DCRM31")
+  
+sample_data <- sample_data[match(samples,sample_data$Sample),]
+```
+
+
+```{r}
+covmat <- read_table2("hpc/angsd/pcangst3.cov",col_names = FALSE) %>% 
+  as.matrix()
+
+colnames(covmat) <- sample_data$Sample
+rownames(covmat) <- sample_data$Sample
+
+pop_eigen <- eigen(covmat)
+
+pop_pca <- data.frame(x=pop_eigen$vectors[,1],y=pop_eigen$vectors[,2],sample_data) %>% 
+  mutate(Location = str_remove(Location,"GBR - ")) %>% 
+  filter(Location!="Unknown")
+
+ggplot(pop_pca ,aes(x=x,y=y)) + geom_point(aes(shape=Location,color=Pop),size=2) + 
+  theme_pubclean() +
+  guides(color='none') +
+  theme(legend.position = "bottom") +
+  theme(legend.title = element_blank()) +
+  xlab("PC1") + ylab("PC2") +
+  scale_color_manual(values = cluster_colors)
+
+ggsave("figures/PCAngst.png")
+```
+
+Admixture proportions are also calculated by PCAngst (based on optimal K = 3).  These can be plotted in the style of a STRUCTURE plot as follows;
+
+```{r}
+library(RcppCNPy)
+sample_ids <- sample_data$Sample
+
+cluster_names <- c("Cluster1"="X1","Cluster2"="X2","Cluster3"="X3")
+cluster_order <- c("Cluster1"=1,"Cluster2"=2,"Cluster3"=3)
+
+q3_m <- npyLoad("hpc/angsd/pcangst3.admix.Q.npy")
+colnames(q3_m) <- c("X3","X2","X1")
+
+
+q3_admix <- q3_m %>% as_tibble() %>% 
+  add_column(Sample = sample_ids) %>% 
+  gather(cluster,proportion,-Sample) %>% 
+  left_join(sample_data) %>% 
+  mutate(pop_order = cluster_names[Pop])
+
+accols <- cluster_colors
+names(accols) <- colnames(q3_m)
+
+ggplot(q3_admix ,aes(x=reorder(Sample,desc(pop_order)),y=proportion)) + 
+  geom_bar(aes(fill=cluster,color=cluster),stat="identity") + 
+  theme_pubclean() + 
+  xlab("") + ylab("Proportion") + 
+  scale_color_manual(values = accols) +
+  scale_fill_manual(values = accols, labels = names(cluster_colors)) + 
+  theme(axis.text.x = element_text(angle=90), legend.title = element_blank(), legend.position = 'None') +
+  theme(line = element_blank()) +
+  guides(color=FALSE)
+```
+

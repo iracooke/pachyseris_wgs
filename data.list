@@ -11,8 +11,15 @@ hpc/mito_mapping/04_generate_traits.sh
 hpc/mito_mapping/06_generate_popart_nexus.sh
 hpc/mito_mapping/07_calculate_coverage.sh
 hpc/mito_mapping/*_consensus.fasta
+hpc/mito_mapping/AllSamplesPSPEMitoConsensusTrim.fasta*
 
+hpc/angsd/pcangst3.*
+hpc/angsd/all.bamlist
 
-hpc/symbiodinium/AllSamplesPSPESymbC1MitoConsensusHighCov.nex        
+hpc/symbiodinium/AllSamplesPSPESymbC1MitoConsensusHighCov.*      
 hpc/symbiodinium/AllSamplesPSPESymbC1MitoConsensusHighCov_PopArt.nex 
 hpc/symbiodinium/AllSamplesPSPESymbC1MitoConsensusHighCov_PopArt.png
+
+cache/msmc_bootstraps.rds
+
+

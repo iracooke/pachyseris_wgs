@@ -1,0 +1,49 @@
+---
+title: "Mitochondrial Haplotypes"
+output: github_document
+---
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(fig.width=12, fig.height=8,
+                      echo=FALSE, warning=FALSE, message=FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(ggtree)
+library(treeio)
+library(ape)
+```
+
+As a complement to examining mitochondrial haplotype networks we also performed maximum likelihood tree inference on mitochondrial haplotypes using iq-tree. 
+
+For the host we find that the red lineages almost form a monophyletic group (with the exception of DC7957) whereas the green and blue lineages are intermingled within several clades.
+
+```{r}
+mito_tree <- read.iqtree(file = "hpc/mito_mapping/AllSamplesPSPEMitoConsensusTrim.fasta.treefile")
+
+sample_data <- read.delim("raw_data/samples.txt",stringsAsFactors = FALSE) %>% filter(SampleCode!="") %>% select(Sample=SampleCode,Pop=Cluster,Location) 
+
+gt <- ggtree(mito_tree,layout="circular")
+
+gt %<+% sample_data + geom_tiplab(aes(color=Pop)) + theme(legend.position = "right") + scale_color_manual(values = c("Cluster3" = "#e41a1c","Cluster2" = "#377eb8", "Cluster1" = "#4daf4a"))
+
+```
+
+For the symbionts we find that one sample, `DC8229` has a haplotype very different from the rest, perhaps indicating that its dominant symbiont is not Cladocopium.  We removed this sample in order to visualise relationships between the other samples.  The tree reflects the fact that many of the red lineage samples had the same haplotype (see TCS network of haplotypes) and therefore have very short branch lengths in the tree. The green and blue lineages are also strongly intermingled.
+
+```{r}
+library(ggtree)
+symb_mito_tree <- read.iqtree(file = "hpc/symbiodinium/AllSamplesPSPESymbC1MitoConsensusHighCov.nex.treefile")
+
+symb_trimmed_mito_tree <- treeio::drop.tip(symb_mito_tree,"DC8229")
+
+sgt <- ggtree(symb_trimmed_mito_tree,layout="circular")
+
+symb_sample_data <- sample_data %>% filter(Sample %in% symb_mito_tree@phylo$tip.label)
+
+sgt %<+% symb_sample_data + 
+  geom_tiplab(aes(color=Pop)) + 
+  theme(legend.position = "right") + 
+  scale_color_manual(values = c("Cluster3" = "#e41a1c","Cluster2" = "#377eb8", "Cluster1" = "#4daf4a"))
+```
