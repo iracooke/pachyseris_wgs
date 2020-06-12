@@ -14,4 +14,5 @@ Shell scripts and R code to accompany the paper
 ### Downstream Analysis
 
 - [Population Structure](01_population_structure.md)
-- [Demographic History with MSMC](03_msmc.md) : Rmd file [03_msmc.Rmd](03_msmc.Rmd)
+- [Phylogenetic inference from Mitochondrial genomes](02_mitogenomes.md)
+- [Demographic History with MSMC](03_msmc.md)
