@@ -15,6 +15,11 @@ library(treeio)
 library(ape)
 ```
 
+
+The mitochondrial haplotype network for host was visualised using PopArt (see below). 
+
+![hostmito](figures/mito_network.png)
+
 As a complement to examining mitochondrial haplotype networks we also performed maximum likelihood tree inference on mitochondrial haplotypes using iq-tree. 
 
 For the host we find that the red lineages almost form a monophyletic group (with the exception of DC7957) whereas the green and blue lineages are intermingled within several clades.

@@ -10,6 +10,7 @@ Shell scripts and R code to accompany the paper
 - [Host mitochondrial genome assembly](hpc/mitobim/README.md)
 - [Host mitochondrial haplotype network](hpc/mito_mapping/README.md)
 - [Symbiont mitochondrial haplotype network](hpc/symbiodinium/README.md)
+- [Sequencing coverage summary](04_sequencing_summary.md)
 
 ### Downstream Analysis
 
