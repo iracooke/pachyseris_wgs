@@ -1,2 +1,2 @@
 
-tar -zcvf data.tgz $(cat data.list)
+tar -zcvf pachyseris_wgs.tgz $(cat data.list)
