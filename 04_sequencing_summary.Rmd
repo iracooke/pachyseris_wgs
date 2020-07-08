@@ -30,7 +30,7 @@ DC8230	| GBR - Ribbon10 BackReef	| 6.5 | Green |
 DC8235	| GBR - Ribbon10 BackReef	| 6.5 | Green |
 DC8220	| GBR - Ribbon10 BackReef	| 5.0 | Blue |
 DC8229	| GBR - Ribbon10 BackReef	| 5.6 | Blue |
-DC8222	| GBR - Ribbon10 BackReef	| 4.0 | Blue |
+DC8222	| GBR - Ribbon10 BackReef	| 4.0 | Red |
 DC8223	| GBR - Ribbon10 BackReef	| 4.4 | Red |
 DC8238	| GBR - Ribbon10 BackReef	| 4.6 | Red |
 

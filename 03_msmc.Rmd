@@ -117,17 +117,17 @@ ggsave(msmc_step_plot,filename = "figures/msmc_step_id.png",width=14)
 ```{r}
 bs_data_id <- bs_data %>% unite(bsid,ID,bootstrap,remove = FALSE)
 
-ggplot(bs_av,aes(x=left_time_boundary/mu*gen,y=(1/lambda)/mu)) + 
+ggplot(bs_av,aes(x=(left_time_boundary/mu)*gen,y=(1/lambda)/mu)) + 
 #  geom_step(data = bs_data_id,size=1,aes(group=bsid,color=Pop),alpha=0.1) + 
-  geom_step(data = bs_av,size=0.5,aes(group=ID,color=Pop),alpha=0.5,linetype=1) + 
-  geom_smooth(aes(color=Pop,fill=Pop),span=0.2,se=FALSE) +
+  geom_step(data = bs_av,size=0.5,aes(group=ID,color=Pop),alpha=1,linetype=1) + 
+ # geom_smooth(aes(color=Pop,fill=Pop),span=0.2,se=FALSE) +
   scale_color_manual(values = c("C3" = "#e41a1c","C2" = "#377eb8", "C1" = "#4daf4a")) +
   scale_x_log10(breaks=c(1e+4,1e+5,1e+6,1e+7), labels=c("10kya","100kya","1mya","10mya")) +
   xlab('Years ago') +
   ylab(expression(paste("Effective Population Size ",N[e]))) + 
   theme_minimal() + 
   theme(text=element_text(size=20), legend.title = element_blank()) + 
-  guides(color='none',fill='none') +
+#  guides(color='none',fill='none') +
   ylim(0,ymax*1.2) +
   scale_y_continuous(labels = scales::scientific)
   # geom_vline(xintercept = 1e5) +
@@ -136,3 +136,36 @@ ggplot(bs_av,aes(x=left_time_boundary/mu*gen,y=(1/lambda)/mu)) +
 
 ggsave(filename = "figures/msmc_step.png",width=12)
 ```
+
+```{r}
+library(ggpubr)
+bs_av_p <- bs_av %>% 
+  mutate(generations = left_time_boundary/mu) %>% 
+  mutate(time = generations*gen) %>% 
+  mutate(Ne = (1/lambda)/mu) 
+
+ggplot(bs_av_p,aes(x=generations,y=Ne)) +
+  geom_step(data = bs_av_p,size=0.5,aes(group=ID,color=Pop),alpha=0.5,linetype=1) + 
+  geom_smooth(aes(color=Pop,fill=Pop),span=0.2,se=FALSE) +  
+  scale_color_manual(values = c("C3" = "#e41a1c","C2" = "#377eb8", "C1" = "#4daf4a")) +
+  scale_x_log10() + 
+  annotate(geom="text",x=c(1e3,1e4,1e5,1e6),y=-0.5e4,label = c("1e3","1e4","1e5","1e6")) + 
+  annotate(geom="text",x=c(1e5/gen,1e6/gen,1e7/gen),y=-1.5e4,label = c("100kya","1Mya","10Mya")) + 
+  
+  theme_pubclean() +
+  coord_cartesian(ylim = c(0, 1.4e5),xlim=c(0.8e3,1.2e6), expand = FALSE, clip = "off") +  
+  theme(plot.margin = unit(c(1, 1, 4, 1), "lines"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank()) +
+  theme(legend.position = "None", text = element_text(size=12)) + 
+  ylab(expression(paste("Effective Population Size, ",N[e]))) +
+  
+ggsave(filename = "figures/msmc_step_gen.png",units = "cm" ,width=16,height=10)
+```
+
+
+
+
+

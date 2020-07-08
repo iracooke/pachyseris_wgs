@@ -1,0 +1,23 @@
+SampleCode	Location	File	Cluster	PimSC
+DC1104	GBR - Myrmidon BackReef	PSGMBH1104_sorted.bam	Cluster1	PSGMB_1104
+DC1107	GBR - Myrmidon BackReef	PSGMBH1107_sorted.bam	Cluster2	PSGMB_1107
+DC1108	GBR - Myrmidon BackReef	PSGMBA1108_sorted.bam	Cluster2	PSGMB_1108
+DC1105	GBR - Myrmidon BackReef	PSGMBA1105_sorted.bam	Cluster3	PSGMB_1105
+DC1109	GBR - Myrmidon BackReef	PSGMBA1109_sorted.bam	Cluster3	PSGMB_1109
+				
+DC7967	GBR - GreatDet BackReef	PSGGBH7967_sorted.bam	Cluster1	PSGGB_7967
+DC7969	GBR - GreatDet BackReef	PSGGBH7969_sorted.bam	Cluster1	PSGGB_7969
+DC7962	GBR - GreatDet BackReef	PSGGBH7962_sorted.bam	Cluster2	PSGGB_7962
+DC7968	GBR - GreatDet BackReef	PSGGBH7968_sorted.bam	Cluster2	PSGGB_7968
+DC7955	GBR - GreatDet BackReef	PSGGBH7955_sorted.bam	Cluster3	PSGGB_7955
+DC7957	GBR - GreatDet BackReef	PSGGBH7957_sorted.bam	Cluster3	PSGGB_7957
+DC7958	GBR - GreatDet BackReef	PSGGBH7958_sorted.bam	Cluster3	PSGGB_7958
+				
+DC8218	GBR - Ribbon10 BackReef	PSGRBH8218_sorted.bam	Cluster1	PSGRB_8218
+DC8230	GBR - Ribbon10 BackReef	PSGRBH8230_sorted.bam	Cluster1	PSGRB_8230
+DC8235	GBR - Ribbon10 BackReef	PSGRBH8235_sorted.bam	Cluster1	PSGRB_8235
+DC8220	GBR - Ribbon10 BackReef	PSGRBH8220_sorted.bam	Cluster2	PSGRB_8220
+DC8229	GBR - Ribbon10 BackReef	PSGRBH8229_sorted.bam	Cluster2	PSGRB_8229
+DC8222	GBR - Ribbon10 BackReef	PSGRBH8222_sorted.bam	Cluster3	PSGRB_8222
+DC8223	GBR - Ribbon10 BackReef	PSGRBH8223_sorted.bam	Cluster3	PSGRB_8223
+DC8238	GBR - Ribbon10 BackReef	PSGRBH8238_sorted.bam	Cluster3	PSGRB_8238
