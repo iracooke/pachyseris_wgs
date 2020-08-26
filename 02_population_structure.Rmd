@@ -49,13 +49,13 @@ pop_pca <- data.frame(x=pop_eigen$vectors[,1],y=pop_eigen$vectors[,2],sample_dat
 
 location_shapes <- c("Myrmidon BackReef" = 21,"GreatDet BackReef" = 22, "Ribbon10 BackReef" = 23)
 
-ggplot(pop_pca ,aes(x=x,y=y)) + geom_point(aes(shape=Location,fill=Pop),alpha=0.7,size=1) + 
+ggplot(pop_pca ,aes(x=x,y=y)) + geom_point(aes(shape=Location,fill=Pop),alpha=0.7,size=5) + 
   theme_pubclean() +
   guides(color='none', shape='none', fill='none') +
   theme(legend.position = "bottom") +
   theme(legend.title = element_blank()) +
   xlab("PC1") + ylab("PC2") +
-  scale_color_manual(values = cluster_colors) +
+  scale_fill_manual(values = cluster_colors) +
   scale_shape_manual(values = location_shapes)
 
 ggsave("figures/PCAngst.png")
