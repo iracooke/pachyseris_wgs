@@ -58,6 +58,7 @@ ggplot(pop_pca ,aes(x=x,y=y)) + geom_point(aes(shape=Location,fill=Pop),alpha=0.
   scale_fill_manual(values = cluster_colors) +
   scale_shape_manual(values = location_shapes)
 
+ggsave("figures/PCAngst.pdf")
 ggsave("figures/PCAngst.png")
 ```
 
@@ -97,6 +98,7 @@ ggplot(q3_admix %>% filter(Sample!="DCRM31") ,aes(x=reorder(PimSC,desc(pop_order
   theme(line = element_blank()) + coord_flip() + theme(axis.text.x = element_blank()) +
   guides(color=FALSE)
 
+ggsave("figures/PCAngst_Admix.pdf",width = 4, height = 7)
 ggsave("figures/PCAngst_Admix.png",width = 4, height = 7)
 ```
 

@@ -21,6 +21,6 @@ Lastly we circularised the genome by removing repeated sequences at both ends re
 
 Finally the genome was annotated using [MITOS](http://mitos.bioinf.uni-leipzig.de/index.py)
 
-The mitochondrial genome sequence is available as XXX on genbank 
+The mitochondrial genome sequence is available as [nucleotide sequence in fasta format](PSPEMitobim1Circularized.fasta) or in [GenBank format](PSPEMitoCircularized.gb) which includes annotations.
 
 ![PSPE Mitogenome](pspe_mito.png)

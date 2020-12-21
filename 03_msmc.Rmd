@@ -162,7 +162,8 @@ ggplot(bs_av_p,aes(x=generations,y=Ne)) +
   theme(legend.position = "None", text = element_text(size=12)) + 
   ylab(expression(paste("Effective Population Size, ",N[e]))) +
   
-ggsave(filename = "figures/msmc_step_gen.png",units = "cm" ,width=16,height=10)
+#ggsave(filename = "figures/msmc_step_gen.png",units = "cm" ,width=16,height=10)
+ggsave(filename = "figures/msmc_step_gen.pdf",units = "cm" ,width=16,height=10)
 ```
 
 
