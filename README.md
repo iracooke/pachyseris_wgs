@@ -28,7 +28,7 @@ git clone https://github.com/iracooke/pachysers_wgs.git
 2. Download additional data not hosted on github due to size constraints
 ```bash
 cd pachyseris_wgs
-wget 'https://cloudstor.aarnet.edu.au/plus/s/dARw9IaI8WBwIvR/download' -O data.tgz
+wget 'http://data.qld.edu.au/public/Q5999/iracooke/pachyseris_wgs/data.tgz' -O data.tgz
 tar -zxvf data.tgz 
 ```
 3. Open the project file in RStudio and open the desired file (eg 01_mitogenomes.Rmd).  After installing any required R packages the code should run and produce plots and tables identical to those shown in the web links above.
